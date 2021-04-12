@@ -25,16 +25,33 @@ let persons = [
 //   response.end(JSON.stringify(persons))
 // })
 
-app.get("/", (request, response) => {
+app.get("/", (_request, response) => {
   response.send("<h1> Welcome to phonebook API</h1>")
 })
 
-app.get("/api/persons", (request, response) => {
+app.get("/info", (_request, response) => {
+  response.send(
+    "<p> Phonebook has info " + persons.length + " for people </p>" + new Date()
+  )
+})
+
+app.get("/api/persons", (_request, response) => {
   response.json(persons)
 })
 
-app.get("/info", (request, response) => {
-  response.send("<p> Phonebook has info " + persons.length + " for people </p>" + new Date())
+app.get("/api/persons/:id", (request, response) => {
+  try {
+    const idPerson = request.params.id
+    const person = persons.find((person) => person.id === Number(idPerson))
+    if (!person) {
+      throw Error("The id does not exists")
+    }
+
+    response.status(200).json(person)
+  } catch (error) {
+    console.log(error)
+    response.status(404).json({ message: error.message})
+  }
 })
 
 const PORT = 3001
