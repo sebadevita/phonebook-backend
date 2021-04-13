@@ -71,6 +71,12 @@ app.post("/api/persons", (request, response) => {
     })
   }
 
+  if(personAlreadyExists(person.name)){
+    return response.status(400).json({
+      error: 'name must be unique'
+    })
+  }
+
   const newPerson = {
     id: maxId + 1,
     name: person.name,
@@ -82,6 +88,11 @@ app.post("/api/persons", (request, response) => {
 
   response.json(newPerson)
 })
+
+const personAlreadyExists = (name) =>{
+  return persons.some(person => person.name === name)
+
+}
 
 
 const PORT = 3001
