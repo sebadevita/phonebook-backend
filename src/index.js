@@ -40,17 +40,13 @@ app.get("/api/persons", (_request, response) => {
 })
 
 app.get("/api/persons/:id", (request, response) => {
-  try {
-    const idPerson = request.params.id
-    const person = persons.find((person) => person.id === Number(idPerson))
-    if (!person) {
-      throw Error("The id does not exists")
-    }
-
-    response.status(200).json(person)
-  } catch (error) {
-    console.log(error)
-    response.status(404).json({ message: error.message})
+  const idPerson = Number(request.params.id)
+  const person = persons.find(person => person.id === idPerson)
+  
+  if (person){
+    response.json(person)
+  } else {
+    response.status(404).end()
   }
 })
 
