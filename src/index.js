@@ -1,8 +1,10 @@
 const http = require("http")
 const express = require("express")
+const cors = require("cors")
 const morgan = require("morgan")
 const app = express()
 app.use(express.json())
+app.use(cors())
 app.use(morgan('tiny'))
 app.use(morgan(':method :url :status :response-time ms - :res[content-length] :body - :req[content-length]'));
 
@@ -101,5 +103,5 @@ const personAlreadyExists = (name) =>{
 
 
 const PORT = 3001
-app.listen(PORT)
+app.listen(process.env.PORT || PORT)
 console.log(`Server running on port ${PORT}`)
