@@ -28,9 +28,17 @@ app.get("/", (_request, response) => {
 })
 
 app.get("/info", (_request, response) => {
-  response.send(
-    "<p> Phonebook has info " + persons.length + " for people </p>" + new Date()
-  )
+  
+  Person.count({}, function(error, result){
+    if(error){
+      console.log(error)
+    } else {
+
+      response.send(
+        "<p> Phonebook has info " + result + " for people </p>" + new Date()
+      )
+    }
+  })
 })
 
 app.get("/api/persons", (_request, response) => {
@@ -84,12 +92,6 @@ app.post("/api/persons", (request, response) => {
     })
   }
 
-  if (personAlreadyExists(newPerson.name)) {
-    return response.status(400).json({
-      error: "name must be unique",
-    })
-  }
-
   const person = new Person({
     name: newPerson.name,
     number: newPerson.number
@@ -119,9 +121,6 @@ app.put("/api/persons/:id", (request, response, next) => {
 app.use(unknownEndPoint)
 app.use(errorHandler)
 
-const personAlreadyExists = (name) => {
-  return persons.some((person) => person.name === name)
-}
 
 const PORT = process.env.PORT
 app.listen(PORT)
