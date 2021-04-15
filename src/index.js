@@ -1,4 +1,8 @@
 require("dotenv").config()
+
+const errorHandler = require('./middlewares/errorHandler')
+const unknownEndPoint = require('./middlewares/unknownEndPoint')
+
 const Person = require('./models/person')
 
 const http = require("http")
@@ -18,25 +22,6 @@ app.use(
 
 morgan.token("body", (req, res) => JSON.stringify(req.body))
 
-
-let persons = [
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3,
-  },
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "12-34567-8",
-  },
-  {
-    id: 99,
-    name: "Adam Smith",
-    number: "12-34567-8",
-  },
-]
-
 app.get("/", (_request, response) => {
   response.send("<h1> Welcome to phonebook API</h1>")
 })
@@ -54,29 +39,32 @@ app.get("/api/persons", (_request, response) => {
 
 })
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   const idPerson = request.params.id
   Person.findById(idPerson).then(person => {
     if (person) {
       response.json(person)
     } else {
-      response.status(404).end()
+      response.status(404).json({error: "could not find a person with the given id"})
     }
   })
   .catch(error => {
     console.log(error)
-    response.status(500).end
+    next(error)
   })
 
-  
-  
+
 })
 
 app.delete("/api/persons/:id", (request, response) => {
-  const idPerson = Number(request.params.id)
-  persons = persons.filter((person) => person.id !== idPerson)
+  const idPerson = request.params.id
 
-  response.status(204).end()
+  Person.findByIdAndRemove(idPerson)
+  .then(result => {
+    response.status(204).end()
+  })
+
+  .catch(error => next(error))
 })
 
 app.post("/api/persons", (request, response) => {
@@ -110,6 +98,9 @@ app.post("/api/persons", (request, response) => {
     response.json(newPerson)
   })
 })
+
+app.use(unknownEndPoint)
+app.use(errorHandler)
 
 const personAlreadyExists = (name) => {
   return persons.some((person) => person.name === name)
