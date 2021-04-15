@@ -9,6 +9,7 @@ const http = require("http")
 const express = require("express")
 const cors = require("cors")
 const morgan = require("morgan")
+const { update } = require("./models/person")
 const app = express()
 app.use(express.json())
 app.use(cors())
@@ -56,15 +57,15 @@ app.get("/api/persons/:id", (request, response, next) => {
 
 })
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   const idPerson = request.params.id
 
   Person.findByIdAndRemove(idPerson)
   .then(result => {
     response.status(204).end()
   })
-
-  .catch(error => next(error))
+  .catch(error => {
+    next(error)})
 })
 
 app.post("/api/persons", (request, response) => {
@@ -97,6 +98,22 @@ app.post("/api/persons", (request, response) => {
   person.save().then(newPerson => {
     response.json(newPerson)
   })
+})
+
+app.put("/api/persons/:id", (request, response, next) => {
+  const updatedPerson = request.body
+  idPerson = request.params.id
+  const person = {
+    name: updatedPerson.name,
+    number: updatedPerson.number
+  }
+
+  Person.findByIdAndUpdate(idPerson, person, {new: true})
+    .then(updatedNote => {
+      response.json(updatedNote)
+    })
+    .catch(error => next(error))
+
 })
 
 app.use(unknownEndPoint)
