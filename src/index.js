@@ -57,14 +57,18 @@ app.get("/api/persons", (_request, response) => {
 app.get("/api/persons/:id", (request, response) => {
   const idPerson = request.params.id
   Person.findById(idPerson).then(person => {
-    response.json(person)
+    if (person) {
+      response.json(person)
+    } else {
+      response.status(404).end()
+    }
+  })
+  .catch(error => {
+    console.log(error)
+    response.status(500).end
   })
 
-  // if (person) {
-  //   response.json(person)
-  // } else {
-  //   response.status(404).end()
-  // }
+  
   
 })
 
