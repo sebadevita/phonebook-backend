@@ -1,3 +1,4 @@
+require("dotenv").config()
 const http = require("http")
 const express = require("express")
 const cors = require("cors")
@@ -5,11 +6,32 @@ const morgan = require("morgan")
 const app = express()
 app.use(express.json())
 app.use(cors())
-app.use(express.static('build'))
-app.use(morgan('tiny'))
-app.use(morgan(':method :url :status :response-time ms - :res[content-length] :body - :req[content-length]'));
+app.use(express.static("build"))
+app.use(morgan("tiny"))
+app.use(
+  morgan(
+    ":method :url :status :response-time ms - :res[content-length] :body - :req[content-length]"
+  )
+)
+const mongoose = require("mongoose")
 
-morgan.token('body', (req, res) => JSON.stringify(req.body));
+morgan.token("body", (req, res) => JSON.stringify(req.body))
+
+const url = process.env.MONGO_DB_URI
+
+mongoose.connect(url, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+  useCreateIndex: true,
+})
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+})
+
+const Person = mongoose.model("Person", personSchema)
 
 let persons = [
   {
@@ -29,11 +51,6 @@ let persons = [
   },
 ]
 
-// const app = http.createServer((request, response) => {
-//   response.writeHead(200, { 'Content-Type': 'application/json' })
-//   response.end(JSON.stringify(persons))
-// })
-
 app.get("/", (_request, response) => {
   response.send("<h1> Welcome to phonebook API</h1>")
 })
@@ -45,14 +62,16 @@ app.get("/info", (_request, response) => {
 })
 
 app.get("/api/persons", (_request, response) => {
-  response.json(persons)
+  Person.find({}).then(persons => {
+    response.json(persons)
+  }) 
 })
 
 app.get("/api/persons/:id", (request, response) => {
   const idPerson = Number(request.params.id)
-  const person = persons.find(person => person.id === idPerson)
-  
-  if (person){
+  const person = persons.find((person) => person.id === idPerson)
+
+  if (person) {
     response.json(person)
   } else {
     response.status(404).end()
@@ -61,27 +80,26 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.delete("/api/persons/:id", (request, response) => {
   const idPerson = Number(request.params.id)
-  persons = persons.filter(person => person.id !== idPerson)
-  
+  persons = persons.filter((person) => person.id !== idPerson)
+
   response.status(204).end()
 })
 
 app.post("/api/persons", (request, response) => {
-  
   console.log(request.body)
   const person = request.body
-  const ids = persons.map(person => person.id)
+  const ids = persons.map((person) => person.id)
   const maxId = Math.max(...ids)
 
-  if(!person.name || !person.number){
+  if (!person.name || !person.number) {
     return response.status(400).json({
-      error: 'name is missing'
+      error: "name is missing",
     })
   }
 
-  if(personAlreadyExists(person.name)){
+  if (personAlreadyExists(person.name)) {
     return response.status(400).json({
-      error: 'name must be unique'
+      error: "name must be unique",
     })
   }
 
@@ -89,19 +107,16 @@ app.post("/api/persons", (request, response) => {
     id: maxId + 1,
     name: person.name,
     number: person.number,
-    
   }
-  
+
   persons = persons.concat(newPerson)
 
   response.json(newPerson)
 })
 
-const personAlreadyExists = (name) =>{
-  return persons.some(person => person.name === name)
-
+const personAlreadyExists = (name) => {
+  return persons.some((person) => person.name === name)
 }
-
 
 const PORT = process.env.PORT
 app.listen(PORT)
