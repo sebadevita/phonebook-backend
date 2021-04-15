@@ -51,17 +51,21 @@ app.get("/api/persons", (_request, response) => {
   Person.find({}).then(persons => {
     response.json(persons)
   }) 
+
 })
 
 app.get("/api/persons/:id", (request, response) => {
-  const idPerson = Number(request.params.id)
-  const person = persons.find((person) => person.id === idPerson)
-
-  if (person) {
+  const idPerson = request.params.id
+  Person.findById(idPerson).then(person => {
     response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  })
+
+  // if (person) {
+  //   response.json(person)
+  // } else {
+  //   response.status(404).end()
+  // }
+  
 })
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -73,31 +77,34 @@ app.delete("/api/persons/:id", (request, response) => {
 
 app.post("/api/persons", (request, response) => {
   console.log(request.body)
-  const person = request.body
-  const ids = persons.map((person) => person.id)
-  const maxId = Math.max(...ids)
+  const newPerson = request.body
 
-  if (!person.name || !person.number) {
+  if (!newPerson.name) {
     return response.status(400).json({
       error: "name is missing",
     })
   }
 
-  if (personAlreadyExists(person.name)) {
+  if (!newPerson.number) {
+    return response.status(400).json({
+      error: "number is missing",
+    })
+  }
+
+  if (personAlreadyExists(newPerson.name)) {
     return response.status(400).json({
       error: "name must be unique",
     })
   }
 
-  const newPerson = {
-    id: maxId + 1,
-    name: person.name,
-    number: person.number,
-  }
+  const person = new Person({
+    name: newPerson.name,
+    number: newPerson.number
+  })
 
-  persons = persons.concat(newPerson)
-
-  response.json(newPerson)
+  person.save().then(newPerson => {
+    response.json(newPerson)
+  })
 })
 
 const personAlreadyExists = (name) => {
