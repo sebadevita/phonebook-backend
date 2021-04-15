@@ -1,4 +1,6 @@
 require("dotenv").config()
+const Person = require('./models/person')
+
 const http = require("http")
 const express = require("express")
 const cors = require("cors")
@@ -13,25 +15,9 @@ app.use(
     ":method :url :status :response-time ms - :res[content-length] :body - :req[content-length]"
   )
 )
-const mongoose = require("mongoose")
 
 morgan.token("body", (req, res) => JSON.stringify(req.body))
 
-const url = process.env.MONGO_DB_URI
-
-mongoose.connect(url, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-  useCreateIndex: true,
-})
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-})
-
-const Person = mongoose.model("Person", personSchema)
 
 let persons = [
   {
